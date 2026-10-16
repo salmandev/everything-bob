@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Everything Bob — The IBM Bob Harness Ecosystem</title>
+  <style>
+    :root {
+      --ibm-blue: #0062ff;
+      --ibm-blue-dark: #0043ce;
+      --ibm-blue-light: #4589ff;
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --text: #f4f4f4;
+      --text-muted: #8d8d9a;
+      --green: #42be65;
+      --yellow: #f1c21b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--ibm-blue-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0a0a0f 0%, #0d1a2e 50%, #0a0a0f 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 4rem 2rem 3rem;
+      text-align: center;
+    }
+    .logo { font-size: 4rem; margin-bottom: 1rem; }
+    header h1 {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--ibm-blue-light);
+      margin-bottom: 0.5rem;
+    }
+    header p.tagline {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 0.5rem;
+    }
+    header p.sub {
+      font-size: 0.9rem;
+      color: var(--ibm-blue);
+      font-style: italic;
+    }
+    .badges {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      color: var(--ibm-blue-light);
+    }
+    .cta-row {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.75rem 1.75rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--ibm-blue);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--ibm-blue-dark); text-decoration: none; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--ibm-blue-light); color: var(--ibm-blue-light); text-decoration: none; }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-wrap: wrap;
+    }
+    .stat {
+      padding: 1.5rem 2.5rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat .number { font-size: 2rem; font-weight: 700; color: var(--ibm-blue-light); }
+    .stat .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Main ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem; }
+    section { margin-bottom: 4rem; }
+    h2 {
+      font-size: 1.5rem;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h2 span { color: var(--ibm-blue-light); }
+
+    /* ── Quickstart ── */
+    .install-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .install-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .install-tab {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      font-family: inherit;
+    }
+    .install-tab.active { color: var(--ibm-blue-light); border-bottom: 2px solid var(--ibm-blue-light); }
+    pre {
+      background: var(--surface2);
+      padding: 1.5rem;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.8;
+    }
+    code { color: var(--green); }
+    .comment { color: var(--text-muted); }
+
+    /* ── Grid cards ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--ibm-blue); }
+    .card-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .card h3 { font-size: 0.9rem; color: var(--text); margin-bottom: 0.4rem; }
+    .card p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+    .card .tag {
+      display: inline-block;
+      margin-top: 0.6rem;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      background: rgba(0,98,255,0.15);
+      color: var(--ibm-blue-light);
+    }
+
+    /* ── Skills table ── */
+    .skill-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.5rem;
+    }
+    .skill-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.8rem;
+    }
+    .skill-item code { color: var(--ibm-blue-light); font-size: 0.75rem; }
+    .skill-item .sdesc { color: var(--text-muted); font-size: 0.7rem; margin-top: 0.2rem; }
+
+    /* ── Comparison table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { background: var(--surface2); color: var(--text-muted); text-align: left; padding: 0.75rem 1rem; font-weight: 600; }
+    td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .bob-col { color: var(--ibm-blue-light); font-weight: 600; }
+    .check { color: var(--green); }
+    .dash { color: var(--text-muted); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+    footer .heart { color: #e34c26; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <div class="logo">🤖</div>
+  <h1>everything-bob</h1>
+  <p class="tagline">The open-source skill library, hook harness, rule system, and multi-mode orchestrator for IBM Bob.</p>
+  <p class="sub">No one knows Bob better than Bob himself.</p>
+  <div class="badges">
+    <span class="badge">IBM Bob 2.x</span>
+    <span class="badge">37+ Skills</span>
+    <span class="badge">7 Hooks</span>
+    <span class="badge">8 Agents</span>
+    <span class="badge">5 Modes</span>
+    <span class="badge">Apache 2.0</span>
+  </div>
+  <div class="cta-row">
+    <a href="https://github.com/salmandev/everything-bob" class="btn btn-primary">⭐ GitHub</a>
+    <a href="#quickstart" class="btn btn-secondary">🚀 Quickstart</a>
+    <a href="#skills" class="btn btn-secondary">⚡ Browse Skills</a>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="number">37+</div><div class="label">Skills</div></div>
+  <div class="stat"><div class="number">7</div><div class="label">Hook Bundles</div></div>
+  <div class="stat"><div class="number">8</div><div class="label">Subagents</div></div>
+  <div class="stat"><div class="number">5</div><div class="label">Custom Modes</div></div>
+  <div class="stat"><div class="number">4</div><div class="label">Plugins</div></div>
+  <div class="stat"><div class="number">85%+</div><div class="label">Token Savings</div></div>
+</div>
+
+<main>
+
+  <!-- Quickstart -->
+  <section id="quickstart">
+    <h2>🚀 <span>Quickstart</span></h2>
+    <div class="install-box">
+      <div class="install-tabs">
+        <button class="install-tab active">npx</button>
+        <button class="install-tab">git clone</button>
+        <button class="install-tab">curl</button>
+      </div>
+      <pre><code><span class="comment"># Zero-setup install — developer profile into .bob/</span>
+npx everything-bob install
+
+<span class="comment"># Or install the full profile (all 37 skills, 7 hooks, 5 modes)</span>
+npx everything-bob install --profile full
+
+<span class="comment"># Install globally for all your projects</span>
+npx everything-bob install --global --profile developer
+
+<span class="comment"># Verify installation</span>
+npx everything-bob status</code></pre>
+    </div>
+  </section>
+
+  <!-- What's Included -->
+  <section>
+    <h2>📦 <span>What's Included</span></h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>37+ Progressive Skills</h3>
+        <p>SKILL.md playbooks that auto-invoke when Bob detects the right context. TDD, security, API design, IBM-native workflows, and more.</p>
+        <span class="tag">Progressive Disclosure</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>7 Lifecycle Hooks</h3>
+        <p>Shell scripts that fire at PreToolUse, PostToolUse, PreInvocation, PostInvocation, and Stop events. Safety gates, auto-formatters, goal verification.</p>
+        <span class="tag">hooks.json</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎭</div>
+        <h3>5 Custom Bob Modes</h3>
+        <p>Purpose-built personas with tight tool permission groups: Architect, Security Auditor, TDD Enforcer, DevOps Engineer, Docs Writer.</p>
+        <span class="tag">custom_modes.yaml</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <h3>8 Subagent Specs</h3>
+        <p>Scoped agent specifications for Bob's spawn_subagent: Planner, Code Reviewer, Build Repair, Security Auditor, Architect, and more.</p>
+        <span class="tag">spawn_subagent</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔌</div>
+        <h3>4 Domain Plugins</h3>
+        <p>Self-contained bundles: web-fullstack, python-ai, security-shield, and devops — each with rules and skills.</p>
+        <span class="tag">Plugins</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <h3>7 MCP Blueprints</h3>
+        <p>Production configs for memory, GitHub, PostgreSQL, SQLite, Redis, web fetch, and Docker — ready to wire into Bob's MCP settings.</p>
+        <span class="tag">MCP</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- IBM-Exclusive Skills -->
+  <section>
+    <h2>🏢 <span>IBM-Exclusive Skills</span></h2>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">Skills no other harness has — built specifically for the IBM ecosystem.</p>
+    <div class="skill-list">
+      <div class="skill-item"><code>watsonx-integration</code><div class="sdesc">watsonx.ai SDK, Granite models, embeddings, governance</div></div>
+      <div class="skill-item"><code>ibm-cloud-deploy</code><div class="sdesc">Code Engine, IKS, IBM Container Registry, Secrets Manager</div></div>
+      <div class="skill-item"><code>db2-architect</code><div class="sdesc">Db2 schemas, stored procedures, zero-downtime migrations</div></div>
+      <div class="skill-item"><code>ibm-i-rpg</code><div class="sdesc">Free-format RPG IV, ILE service programs, embedded SQL</div></div>
+      <div class="skill-item"><code>zos-jcl</code><div class="sdesc">z/OS JCL, DD statements, utilities, ABEND debugging</div></div>
+      <div class="skill-item"><code>langchain-bob</code><div class="sdesc">Use Bob as a tool via ACP in LangChain/LangGraph pipelines</div></div>
+    </div>
+  </section>
+
+  <!-- All Skills -->
+  <section id="skills">
+    <h2>⚡ <span>Full Skills Catalog</span></h2>
+    <div class="skill-list">
+      <div class="skill-item"><code>tdd-workflow</code><div class="sdesc">Red-Green-Refactor with automated test runners</div></div>
+      <div class="skill-item"><code>repo-onboarding</code><div class="sdesc">Fast codebase context bootstrapping</div></div>
+      <div class="skill-item"><code>architecture-designer</code><div class="sdesc">C4 diagrams, ADRs, system design</div></div>
+      <div class="skill-item"><code>git-craftsman</code><div class="sdesc">Conventional commits, atomic diffs, PR descriptions</div></div>
+      <div class="skill-item"><code>security-audit</code><div class="sdesc">OWASP Top 10, secrets scan, dep audit</div></div>
+      <div class="skill-item"><code>api-craftsman</code><div class="sdesc">REST, OpenAPI 3.1, gRPC, RFC 7807</div></div>
+      <div class="skill-item"><code>database-architect</code><div class="sdesc">Zero-downtime migrations, indexing, ACID</div></div>
+      <div class="skill-item"><code>fullstack-nextjs</code><div class="sdesc">Next.js App Router, RSC, Server Actions</div></div>
+      <div class="skill-item"><code>performance-profiler</code><div class="sdesc">Bottleneck analysis, N+1 queries, DB plans</div></div>
+      <div class="skill-item"><code>root-cause-debugger</code><div class="sdesc">git bisect, minimal repros, traceback analysis</div></div>
+      <div class="skill-item"><code>continuous-learning</code><div class="sdesc">Codify corrections into durable rules</div></div>
+      <div class="skill-item"><code>browser-qa-tester</code><div class="sdesc">Playwright E2E tests, accessibility checks</div></div>
+      <div class="skill-item"><code>devops-pipeline</code><div class="sdesc">Multi-stage Dockerfile, GitHub Actions CI/CD</div></div>
+      <div class="skill-item"><code>docker-compose-orchestrator</code><div class="sdesc">Local dev with healthchecks and named volumes</div></div>
+      <div class="skill-item"><code>kubernetes-operator</code><div class="sdesc">k8s manifests, HPA, zero-downtime rolling</div></div>
+      <div class="skill-item"><code>stripe-integration</code><div class="sdesc">Webhook verification, idempotent payments</div></div>
+      <div class="skill-item"><code>redis-cache-patterns</code><div class="sdesc">Enterprise caching, distributed locking</div></div>
+      <div class="skill-item"><code>graphql-architect</code><div class="sdesc">Schema-first, DataLoader, Relay pagination</div></div>
+      <div class="skill-item"><code>supabase-architect</code><div class="sdesc">RLS policies, pgvector, edge functions</div></div>
+      <div class="skill-item"><code>trpc-react-query</code><div class="sdesc">tRPC v11, TanStack Query v5, type safety</div></div>
+      <div class="skill-item"><code>svelte-kit-architect</code><div class="sdesc">Svelte 5 runes, SSR/prerender, form actions</div></div>
+      <div class="skill-item"><code>fastapi-production</code><div class="sdesc">Async FastAPI, Pydantic v2, health probes</div></div>
+      <div class="skill-item"><code>cloudflare-workers</code><div class="sdesc">Edge functions, Wrangler v3, D1, KV</div></div>
+      <div class="skill-item"><code>temporal-workflows</code><div class="sdesc">Resilient workflows, sagas, retry policies</div></div>
+      <div class="skill-item"><code>rag-architect</code><div class="sdesc">RAG pipeline, semantic chunking, retrieval</div></div>
+      <div class="skill-item"><code>ai-first-engineering</code><div class="sdesc">BDD acceptance criteria, blast radius</div></div>
+      <div class="skill-item"><code>github-ops</code><div class="sdesc">GitHub automation, PR gen, semantic releases</div></div>
+      <div class="skill-item"><code>monorepo-architect</code><div class="sdesc">Turborepo, workspaces, shared packages</div></div>
+      <div class="skill-item"><code>openapi-first</code><div class="sdesc">OpenAPI 3.1 contract-first, type gen, validation</div></div>
+      <div class="skill-item"><code>code-review-workflow</code><div class="sdesc">Structured PR reviews with severity ratings</div></div>
+      <div class="skill-item"><code>accessibility-auditor</code><div class="sdesc">WCAG 2.1 AA, axe-core, screen reader testing</div></div>
+      <div class="skill-item"><code>feature-flag-workflow</code><div class="sdesc">LaunchDarkly, trunk-based dev, flag cleanup</div></div>
+      <div class="skill-item"><code>bob-mcp-builder</code><div class="sdesc">Build and register custom MCP servers for Bob</div></div>
+      <div class="skill-item"><code>bob-skill-author</code><div class="sdesc">Author and publish new Bob skills</div></div>
+      <div class="skill-item"><code>bob-mode-author</code><div class="sdesc">Create custom Bob modes with tool permissions</div></div>
+      <div class="skill-item"><code>bob-hook-author</code><div class="sdesc">Write Bob lifecycle hooks and scripts</div></div>
+      <div class="skill-item"><code>bob-rules-author</code><div class="sdesc">Write actionable BOB.md rule files</div></div>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section>
+    <h2>⚖️ <span>vs. Other Harnesses</span></h2>
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>ECC (Claude)</th><th>Everything Gemini</th><th class="bob-col">Everything Bob ✨</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Config root</td><td>.claude/</td><td>.agents/</td><td class="bob-col">.bob/</td></tr>
+        <tr><td>Custom modes w/ tool permissions</td><td class="dash">—</td><td class="dash">—</td><td class="bob-col check">✓ 8 permission groups</td></tr>
+        <tr><td>IBM watsonx / Db2 / IBM i skills</td><td class="dash">—</td><td class="dash">—</td><td class="bob-col check">✓ 6 IBM-exclusive skills</td></tr>
+        <tr><td>Bob as ACP tool in pipelines</td><td class="dash">—</td><td class="dash">—</td><td class="bob-col check">✓ langchain-bob skill</td></tr>
+        <tr><td>Bob meta-skills (author modes/hooks)</td><td class="dash">—</td><td class="dash">—</td><td class="bob-col check">✓ 4 meta-skills</td></tr>
+        <tr><td>CLI tool</td><td class="dash">—</td><td class="check">✓ everything-gemini</td><td class="bob-col check">✓ everything-bob / ebob</td></tr>
+        <tr><td>59-test validation suite</td><td class="dash">—</td><td class="check">✓</td><td class="bob-col check">✓</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+      Full comparison: <a href="ecc-vs-everything-bob.md">ecc-vs-everything-bob.md</a>
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <p>Made with <span class="heart">♥</span> by the IBM Bob Community &nbsp;•&nbsp;
+     Inspired by <a href="https://github.com/affaan-m/everything-claude-code">ECC</a> by Affan Mustafa &amp;
+     <a href="https://github.com/salmandev/everything-gemini">Everything Gemini</a> by salmandev
+  </p>
+  <p style="margin-top:0.5rem;font-style:italic;">No one knows Bob better than Bob himself. 🤖</p>
+</footer>
+
+</body>
+</html>

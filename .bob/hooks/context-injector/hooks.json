@@ -1,0 +1,15 @@
+{
+  "context-injector": {
+    "PreInvocation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/context-injector/scripts/inject-context.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

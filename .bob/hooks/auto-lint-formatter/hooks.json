@@ -1,0 +1,16 @@
+{
+  "auto-lint-formatter": {
+    "PostToolUse": [
+      {
+        "matcher": "write_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/auto-lint-formatter/scripts/auto-format.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

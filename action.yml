@@ -1,0 +1,54 @@
+name: 'Setup Everything Bob'
+description: 'Install everything-bob skills, hooks, modes, and agents into a Bob workspace'
+author: 'salmandev'
+
+branding:
+  icon: 'cpu'
+  color: 'blue'
+
+inputs:
+  profile:
+    description: 'Installation profile: core | developer | full'
+    required: false
+    default: 'developer'
+  global:
+    description: 'Install to global ~/.bob/ instead of workspace .bob/'
+    required: false
+    default: 'false'
+  workspace:
+    description: 'Target workspace directory (default: current directory)'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout everything-bob
+      uses: actions/checkout@v4
+      with:
+        repository: salmandev/everything-bob
+        path: .everything-bob-action
+        ref: main
+
+    - name: Install everything-bob profile
+      shell: bash
+      run: |
+        PROFILE="${{ inputs.profile }}"
+        GLOBAL_FLAG=""
+        if [ "${{ inputs.global }}" = "true" ]; then
+          GLOBAL_FLAG="--global"
+        fi
+        cd "${{ inputs.workspace }}"
+        node "$GITHUB_WORKSPACE/.everything-bob-action/bin/everything-bob" \
+          install --profile "$PROFILE" $GLOBAL_FLAG
+        echo "everything-bob '$PROFILE' profile installed successfully"
+
+    - name: Verify installation
+      shell: bash
+      run: |
+        cd "${{ inputs.workspace }}"
+        node "$GITHUB_WORKSPACE/.everything-bob-action/bin/everything-bob" status --json
+
+    - name: Cleanup action checkout
+      shell: bash
+      run: rm -rf "$GITHUB_WORKSPACE/.everything-bob-action"

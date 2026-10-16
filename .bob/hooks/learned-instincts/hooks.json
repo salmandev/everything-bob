@@ -1,0 +1,15 @@
+{
+  "learned-instincts": {
+    "PostInvocation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/learned-instincts/scripts/save-instinct.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

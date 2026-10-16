@@ -1,6 +1,6 @@
 {
   "name": "everything-bob",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The open-source skill library, hook harness, rule system, and multi-mode orchestrator for IBM Bob",
   "main": "bin/everything-bob",
   "bin": {
@@ -22,7 +22,12 @@
     "skills",
     "hooks",
     "mcp",
-    "everything-bob"
+    "modes",
+    "watsonx",
+    "ibm-cloud",
+    "everything-bob",
+    "langchain",
+    "enterprise-ai"
   ],
   "author": "salmandev",
   "license": "Apache-2.0",
@@ -36,5 +41,21 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "hooks/",
+    "rules/",
+    "plugins/",
+    "agents/",
+    "modes/",
+    "mcp/",
+    "templates/",
+    "README.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "action.yml"
+  ]
 }

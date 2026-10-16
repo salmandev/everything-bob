@@ -1,0 +1,7 @@
+{
+  "name": "Security Shield Plugin",
+  "version": "1.0.0",
+  "description": "Enterprise security rules and hooks: zero-trust, OWASP hardening, secrets management.",
+  "rules": ["rules/zero-trust.md"],
+  "hooks": "hooks.json"
+}

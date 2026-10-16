@@ -1,0 +1,7 @@
+{
+  "name": "Python AI Plugin",
+  "version": "1.0.0",
+  "description": "Python AI/ML engineering rules and skills: LangChain, FastAPI, Pydantic, agent orchestration.",
+  "rules": ["rules/ai-agent-patterns.md"],
+  "skills": ["skills/langchain-orchestrator"]
+}

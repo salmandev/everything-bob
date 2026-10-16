@@ -1,0 +1,18 @@
+# Git
+.git/
+.gitignore
+
+# Dev files
+tests/
+.github/
+docs/index.html
+scripts/install.sh
+
+# macOS
+.DS_Store
+
+# Workspace Bob config (not needed in npm package)
+.bob/
+
+# Logs
+*.log

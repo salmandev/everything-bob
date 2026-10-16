@@ -1,0 +1,16 @@
+{
+  "secret-scrubber": {
+    "PreToolUse": [
+      {
+        "matcher": "write_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/secret-scrubber/scripts/scrub-secrets.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

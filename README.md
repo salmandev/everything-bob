@@ -76,7 +76,7 @@ cd everything-bob
 | :--- | :--- | :--- |
 | **`core`** | Minimalists & Speed | Safety-shield hook, TDD skill, repo-onboarding skill, baseline `BOB.md`. |
 | **`developer`** *(Recommended)* | Daily Software Engineers | Core + 10 skills, 8 subagent specs, auto-formatter & goal-verifier hooks, web-fullstack & python-ai plugins. |
-| **`full`** | Lead Engineers & Architects | Everything: all 30 skills, 8 subagents, full hook suite (7 hooks), all plugins, all custom modes, MCP configs. |
+| **`full`** | Lead Engineers & Architects | Everything: all 37 skills, 8 subagents, full hook suite (7 hooks), all plugins, all custom modes, MCP configs. |
 
 ### 5. In CI / GitHub Actions
 
@@ -161,7 +161,7 @@ everything-bob/
 ├── .bob/                        Self-referential dev rules & maintainer skill
 ├── bin/                         Zero-dependency CLI (everything-bob)
 ├── agents/                      8 scoped subagent specifications
-├── skills/                      30 progressive-disclosure skills
+├── skills/                      37 progressive-disclosure skills
 ├── rules/                       Hierarchical rules (common, languages, paradigms)
 ├── hooks/                       Lifecycle hook bundles (scripts + hooks.json)
 ├── plugins/                     Domain plugins (web-fullstack, python-ai, security, devops)

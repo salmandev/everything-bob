@@ -1,0 +1,26 @@
+{
+  "security-shield-plugin": {
+    "PreToolUse": [
+      {
+        "matcher": "execute_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/bob-shield/scripts/bob-shield.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "write_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/secret-scrubber/scripts/scrub-secrets.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
