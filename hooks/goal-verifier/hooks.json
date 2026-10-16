@@ -1,0 +1,15 @@
+{
+  "goal-verifier": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/goal-verifier/scripts/verify-goal.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

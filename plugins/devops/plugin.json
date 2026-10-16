@@ -1,0 +1,7 @@
+{
+  "name": "DevOps Plugin",
+  "version": "1.0.0",
+  "description": "Infrastructure as Code, Terraform, Kubernetes, and CI/CD pipeline rules and skills.",
+  "rules": ["rules/infrastructure-as-code.md"],
+  "skills": ["skills/terraform-architect"]
+}

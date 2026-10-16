@@ -1,0 +1,83 @@
+{
+  "bob-shield": {
+    "PreToolUse": [
+      {
+        "matcher": "execute_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/bob-shield/scripts/bob-shield.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "secret-scrubber": {
+    "PreToolUse": [
+      {
+        "matcher": "write_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/secret-scrubber/scripts/scrub-secrets.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "auto-lint-formatter": {
+    "PostToolUse": [
+      {
+        "matcher": "write_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/auto-lint-formatter/scripts/auto-format.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "goal-verifier": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/goal-verifier/scripts/verify-goal.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "context-injector": {
+    "PreInvocation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/context-injector/scripts/inject-context.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "learned-instincts": {
+    "PostInvocation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/learned-instincts/scripts/save-instinct.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

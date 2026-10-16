@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.DS_Store
+everything-bob-profile.json
+dist/
+.env
+.DS_Store

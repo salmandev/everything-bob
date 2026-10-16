@@ -1,0 +1,40 @@
+{
+  "name": "everything-bob",
+  "version": "1.0.0",
+  "description": "The open-source skill library, hook harness, rule system, and multi-mode orchestrator for IBM Bob",
+  "main": "bin/everything-bob",
+  "bin": {
+    "everything-bob": "./bin/everything-bob",
+    "ebob": "./bin/everything-bob"
+  },
+  "scripts": {
+    "test": "node tests/cli.test.js",
+    "validate": "./bin/everything-bob validate",
+    "lint": "./scripts/validate.sh"
+  },
+  "keywords": [
+    "ibm",
+    "bob",
+    "ibm-bob",
+    "ai",
+    "agent",
+    "harness",
+    "skills",
+    "hooks",
+    "mcp",
+    "everything-bob"
+  ],
+  "author": "salmandev",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salmandev/everything-bob.git"
+  },
+  "homepage": "https://github.com/salmandev/everything-bob",
+  "bugs": {
+    "url": "https://github.com/salmandev/everything-bob/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

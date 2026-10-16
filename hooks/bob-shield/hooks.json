@@ -1,0 +1,16 @@
+{
+  "bob-shield": {
+    "PreToolUse": [
+      {
+        "matcher": "execute_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/bob-shield/scripts/bob-shield.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

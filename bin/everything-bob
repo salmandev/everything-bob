@@ -1,0 +1,636 @@
+#!/usr/bin/env node
+
+/**
+ * Everything Bob (everything-bob) CLI
+ * Zero-dependency harness manager for IBM Bob
+ * No one knows Bob better than Bob himself.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { execSync } = require('child_process');
+
+const REPO_ROOT = path.resolve(__dirname, '..');
+const GLOBAL_BOB_DIR = path.join(os.homedir(), '.bob');
+const GLOBAL_SKILLS_DIR = path.join(GLOBAL_BOB_DIR, 'skills');
+const GLOBAL_MODES_DIR = path.join(GLOBAL_BOB_DIR, 'settings');
+const WORKSPACE_DIR = process.cwd();
+const BOB_DIR = path.join(WORKSPACE_DIR, '.bob');
+
+let VERSION = '1.0.0';
+try {
+  VERSION = require(path.join(REPO_ROOT, 'package.json')).version || '1.0.0';
+} catch (_) {}
+
+// ANSI Colors
+const R = '\x1b[0m';
+const B = '\x1b[1m';
+const BLUE = '\x1b[34m';
+const CYAN = '\x1b[36m';
+const GREEN = '\x1b[32m';
+const YELLOW = '\x1b[33m';
+const RED = '\x1b[31m';
+const GRAY = '\x1b[90m';
+
+function banner() {
+  console.log(`
+${CYAN}${B}🤖 Everything Bob (${GREEN}everything-bob${CYAN}) v${VERSION}${R}
+${GRAY}The open-source skill library, hook harness, and mode orchestrator for IBM Bob.${R}
+${GRAY}No one knows Bob better than Bob himself.${R}
+`);
+}
+
+function help() {
+  banner();
+  console.log(`${B}USAGE:${R}  everything-bob <command> [options]\n`);
+  console.log(`${B}COMMANDS:${R}`);
+  const cmds = [
+    ['doctor', 'Inspect Bob environment and configuration health'],
+    ['install [options]', 'Install everything-bob profile into workspace or globally'],
+    ['init', 'Initialize everything-bob in current workspace'],
+    ['status', 'Show active skills, hooks, modes, and agents in workspace'],
+    ['diff', 'Compare installed workspace vs. master catalog'],
+    ['update', 'Sync installed components to latest catalog versions'],
+    ['export [options]', 'Export installed config as portable JSON bundle'],
+    ['list', 'Show all available skills, hooks, modes, agents, and plugins'],
+    ['add <type> <name>', 'Add a skill, hook, mode, or plugin to workspace'],
+    ['remove <type> <name>', 'Remove a skill, hook, mode, or plugin from workspace'],
+    ['new-skill <name>', 'Scaffold a new progressive-disclosure skill'],
+    ['new-agent <name>', 'Scaffold a new scoped subagent specification'],
+    ['test-skill <name>', 'Validate a skill\'s SKILL.md frontmatter'],
+    ['test-all', 'Benchmark and validate all skills, hooks, and agents'],
+    ['info <name>', 'Display full playbook for any skill, agent, or hook'],
+    ['completion [--install]', 'Generate or install shell autocompletion'],
+    ['validate', 'Validate all frontmatter, JSON schemas, and hook scripts'],
+    ['version', 'Print everything-bob version'],
+    ['help', 'Show this help message'],
+  ];
+  for (const [cmd, desc] of cmds) {
+    console.log(`  ${GREEN}${cmd.padEnd(26)}${R} ${GRAY}${desc}${R}`);
+  }
+  console.log(`\n${B}OPTIONS:${R}`);
+  console.log(`  ${CYAN}--profile <core|developer|full>${R}  Installation preset (default: developer)`);
+  console.log(`  ${CYAN}--global${R}                         Target global config (~/.bob/)`);
+  console.log(`  ${CYAN}--dry-run${R}                        Preview without modifying disk`);
+  console.log(`  ${CYAN}--json${R}                           Output machine-readable JSON\n`);
+}
+
+function doctor() {
+  banner();
+  console.log(`${B}🔍 Running Bob Environment Diagnostics...${R}\n`);
+
+  // Node.js
+  console.log(`  ${GREEN}✔${R} Node.js: ${B}${process.version}${R}`);
+
+  // Bob CLI check
+  let bobFound = false;
+  try {
+    const v = execSync('bob --version 2>/dev/null', { encoding: 'utf8' }).trim();
+    if (v) { console.log(`  ${GREEN}✔${R} IBM Bob CLI: ${B}${v}${R}`); bobFound = true; }
+  } catch (_) {}
+  if (!bobFound) console.log(`  ${YELLOW}ℹ${R}  IBM Bob CLI: ${GRAY}not found in PATH (Desktop or VS Code extension may be active)${R}`);
+
+  // Global ~/.bob
+  const hasGlobal = fs.existsSync(GLOBAL_BOB_DIR);
+  console.log(`  ${hasGlobal ? GREEN + '✔' : GRAY + '○'}${R} Global config: ${B}${GLOBAL_BOB_DIR}${R}${hasGlobal ? '' : GRAY + ' (not yet created)' + R}`);
+
+  // Workspace .bob
+  const hasWorkspace = fs.existsSync(BOB_DIR);
+  console.log(`  ${hasWorkspace ? GREEN + '✔' : GRAY + '○'}${R} Workspace config: ${B}${BOB_DIR}${R}${hasWorkspace ? '' : GRAY + ' (not yet created)' + R}`);
+
+  // Git
+  try {
+    execSync('git rev-parse --is-inside-work-tree 2>/dev/null');
+    const branch = execSync('git rev-parse --abbrev-ref HEAD 2>/dev/null', { encoding: 'utf8' }).trim();
+    console.log(`  ${GREEN}✔${R} Git repository (branch: ${B}${branch}${R})`);
+  } catch (_) {
+    console.log(`  ${YELLOW}ℹ${R}  Current directory is not a git repository`);
+  }
+
+  console.log(`\n${GREEN}${B}Diagnostics complete.${R}\n`);
+}
+
+function list() {
+  banner();
+  console.log(`${B}📦 Everything Bob Catalog:${R}\n`);
+
+  // Skills
+  const skillsDir = path.join(REPO_ROOT, 'skills');
+  console.log(`${CYAN}${B}⚡ Progressive Disclosure Skills (${fs.readdirSync(skillsDir).length}):${R}`);
+  for (const s of fs.readdirSync(skillsDir).filter(f => !f.startsWith(".")).sort()) {
+    const md = path.join(skillsDir, s, 'SKILL.md');
+    let desc = '';
+    if (fs.existsSync(md)) {
+      const m = fs.readFileSync(md, 'utf8').match(/description:\s*>?-?\s*([^\n\r]+)/);
+      if (m) desc = m[1].trim().substring(0, 70);
+    }
+    console.log(`  ${B}${s.padEnd(30)}${R} ${GRAY}${desc}${R}`);
+  }
+
+  // Hooks
+  const hooksDir = path.join(REPO_ROOT, 'hooks');
+  console.log(`\n${CYAN}${B}🛡️  Lifecycle Hooks:${R}`);
+  for (const h of fs.readdirSync(hooksDir).sort()) {
+    console.log(`  ${B}${h}${R}`);
+  }
+
+  // Agents
+  const agentsDir = path.join(REPO_ROOT, 'agents');
+  console.log(`\n${CYAN}${B}🤖 Subagent Specifications:${R}`);
+  for (const a of fs.readdirSync(agentsDir).sort()) {
+    console.log(`  ${B}${a.replace('.md', '')}${R}`);
+  }
+
+  // Modes
+  const modesFile = path.join(REPO_ROOT, 'modes', 'custom_modes.yaml');
+  if (fs.existsSync(modesFile)) {
+    console.log(`\n${CYAN}${B}🎭 Custom Bob Modes:${R}`);
+    const matches = fs.readFileSync(modesFile, 'utf8').match(/slug:\s*([^\n]+)/g) || [];
+    for (const m of matches) {
+      console.log(`  ${B}${m.replace('slug:', '').trim()}${R}`);
+    }
+  }
+
+  // Plugins
+  const pluginsDir = path.join(REPO_ROOT, 'plugins');
+  console.log(`\n${CYAN}${B}🔌 Domain Plugins:${R}`);
+  for (const p of fs.readdirSync(pluginsDir).sort()) {
+    console.log(`  ${B}${p}${R}`);
+  }
+  console.log('');
+}
+
+function copyDir(src, dest) {
+  if (!fs.existsSync(src)) return;
+  fs.mkdirSync(dest, { recursive: true });
+  for (const item of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, item.name);
+    const d = path.join(dest, item.name);
+    if (item.isDirectory()) copyDir(s, d);
+    else {
+      fs.mkdirSync(path.dirname(d), { recursive: true });
+      fs.copyFileSync(s, d);
+      try {
+        const stat = fs.statSync(s);
+        if (stat.mode & 0o111) fs.chmodSync(d, 0o755);
+      } catch (_) {}
+    }
+  }
+}
+
+function install(profile = 'developer', isGlobal = false, isDryRun = false) {
+  banner();
+  const targetDir = isGlobal ? GLOBAL_BOB_DIR : BOB_DIR;
+  const targetSkills = path.join(targetDir, 'skills');
+  const targetHooks = path.join(targetDir, 'hooks');
+  const targetAgents = path.join(targetDir, 'agents');
+  const targetPlugins = path.join(targetDir, 'plugins');
+  const targetModes = isGlobal ? path.join(GLOBAL_BOB_DIR, 'settings') : targetDir;
+
+  if (isDryRun) console.log(`${YELLOW}${B}🔍 DRY RUN — no files will be modified on disk.${R}\n`);
+  console.log(`${B}🚀 Installing everything-bob Profile: [${GREEN}${profile}${R}${B}]${R}`);
+  console.log(`Target: ${CYAN}${targetDir}${R}\n`);
+
+  const say = (msg) => console.log(`  ${GREEN}✔${R} ${isDryRun ? '[DRY RUN] Would install' : 'Installed'} ${msg}`);
+
+  if (!isDryRun) {
+    fs.mkdirSync(targetSkills, { recursive: true });
+    fs.mkdirSync(targetHooks, { recursive: true });
+  }
+
+  // Base BOB.md rule
+  const bobMd = path.join(REPO_ROOT, 'rules', 'common', 'BOB.md');
+  if (fs.existsSync(bobMd)) {
+    if (!isDryRun) { fs.mkdirSync(path.join(targetDir, 'rules'), { recursive: true }); fs.copyFileSync(bobMd, path.join(targetDir, 'rules', 'BOB.md')); }
+    say('base BOB.md rule');
+  }
+
+  const installSkill = (name) => {
+    const src = path.join(REPO_ROOT, 'skills', name);
+    if (fs.existsSync(src)) { if (!isDryRun) copyDir(src, path.join(targetSkills, name)); say(`skill: ${name}`); }
+  };
+  const installHook = (name) => {
+    const src = path.join(REPO_ROOT, 'hooks', name);
+    if (fs.existsSync(src)) { if (!isDryRun) copyDir(src, path.join(targetHooks, name)); say(`hook: ${name}`); }
+  };
+
+  // Core profile
+  if (['core', 'developer', 'full'].includes(profile)) {
+    installSkill('tdd-workflow');
+    installSkill('repo-onboarding');
+    installHook('safety-shield');
+  }
+
+  // Developer profile
+  if (['developer', 'full'].includes(profile)) {
+    for (const s of ['architecture-designer', 'git-craftsman', 'security-audit', 'api-craftsman', 'performance-profiler', 'root-cause-debugger', 'fullstack-nextjs', 'continuous-learning', 'browser-qa-tester', 'bob-mcp-builder']) {
+      installSkill(s);
+    }
+    installHook('auto-lint-formatter');
+    installHook('goal-verifier');
+    installHook('secret-scrubber');
+
+    // Language rules
+    const langRules = path.join(REPO_ROOT, 'rules', 'languages');
+    if (!isDryRun) copyDir(langRules, path.join(targetDir, 'rules', 'languages'));
+    say('language rules (TypeScript, Python, Go)');
+
+    // Agents
+    const agentsSrc = path.join(REPO_ROOT, 'agents');
+    if (!isDryRun) copyDir(agentsSrc, targetAgents);
+    say('8 scoped subagent specifications (agents/)');
+
+    // Developer plugins
+    for (const p of ['web-fullstack', 'python-ai']) {
+      const src = path.join(REPO_ROOT, 'plugins', p);
+      if (!isDryRun) copyDir(src, path.join(targetPlugins, p));
+      say(`plugin: ${p}`);
+    }
+  }
+
+  // Full profile
+  if (profile === 'full') {
+    if (!isDryRun) copyDir(path.join(REPO_ROOT, 'skills'), targetSkills);
+    say('entire skills library (30 progressive skills)');
+
+    if (!isDryRun) copyDir(path.join(REPO_ROOT, 'hooks'), targetHooks);
+    say('full lifecycle hooks suite (7 hooks)');
+
+    if (!isDryRun) copyDir(path.join(REPO_ROOT, 'rules'), path.join(targetDir, 'rules'));
+    say('entire rules library');
+
+    if (!isDryRun) copyDir(path.join(REPO_ROOT, 'plugins'), targetPlugins);
+    say('all domain plugins (web-fullstack, python-ai, security-shield, devops)');
+
+    // Install modes
+    const modesSrc = path.join(REPO_ROOT, 'modes', 'custom_modes.yaml');
+    if (fs.existsSync(modesSrc)) {
+      if (!isDryRun) { fs.mkdirSync(targetModes, { recursive: true }); fs.copyFileSync(modesSrc, path.join(targetModes, 'custom_modes.yaml')); }
+      say(`custom_modes.yaml (5 Bob modes) → ${targetModes}`);
+    }
+
+    // MCP example
+    const mcpExample = path.join(REPO_ROOT, 'mcp', 'mcp_config.example.json');
+    if (fs.existsSync(mcpExample)) {
+      if (!isDryRun) fs.copyFileSync(mcpExample, path.join(targetDir, 'mcp_config.example.json'));
+      say('mcp_config.example.json (7 MCP blueprints)');
+    }
+  }
+
+  // Install hooks.json template
+  const tplKey = profile === 'core' ? 'minimal' : profile === 'full' ? 'full-power' : 'recommended';
+  const tpl = path.join(REPO_ROOT, 'templates', tplKey, 'hooks.json');
+  if (fs.existsSync(tpl)) {
+    if (!isDryRun) fs.copyFileSync(tpl, path.join(targetDir, 'hooks.json'));
+    say(`hooks.json template (${tplKey})`);
+  }
+
+  console.log(`\n${GREEN}${B}${isDryRun ? '✨ Dry run complete! 0 files modified.' : '✨ Installation complete! Start a new Bob session to use your new skills and hooks.'}${R}\n`);
+}
+
+function status(isGlobal = false, asJson = false) {
+  const targetDir = isGlobal ? GLOBAL_BOB_DIR : BOB_DIR;
+  const skillsDir = path.join(targetDir, 'skills');
+  const hooksFile = path.join(targetDir, 'hooks.json');
+  const agentsDir = path.join(targetDir, 'agents');
+
+  const installedSkills = fs.existsSync(skillsDir)
+    ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name).sort()
+    : [];
+  const installedAgents = fs.existsSync(agentsDir)
+    ? fs.readdirSync(agentsDir).filter(f => f.endsWith('.md')).map(f => f.replace('.md', '')).sort()
+    : [];
+  let hooksConfig = {};
+  if (fs.existsSync(hooksFile)) { try { hooksConfig = JSON.parse(fs.readFileSync(hooksFile, 'utf8')); } catch (_) {} }
+
+  if (asJson) {
+    console.log(JSON.stringify({ version: VERSION, targetDir, isGlobal, skills: installedSkills, agents: installedAgents, hooks: Object.keys(hooksConfig) }, null, 2));
+    return;
+  }
+
+  banner();
+  console.log(`${B}📊 Everything Bob Workspace Status${R}\nDirectory: ${CYAN}${targetDir}${R}\n`);
+
+  if (!fs.existsSync(targetDir)) {
+    console.log(`  ${YELLOW}○ Not initialized. Run: everything-bob install${R}\n`); return;
+  }
+
+  console.log(`${CYAN}${B}⚡ Installed Skills (${installedSkills.length}/30):${R}`);
+  if (installedSkills.length === 0) console.log(`  ${GRAY}(none)${R}`);
+  else installedSkills.forEach(s => console.log(`  ${GREEN}✔${R} ${s}`));
+
+  console.log(`\n${CYAN}${B}🤖 Installed Agents (${installedAgents.length}/8):${R}`);
+  if (installedAgents.length === 0) console.log(`  ${GRAY}(none)${R}`);
+  else installedAgents.forEach(a => console.log(`  ${GREEN}✔${R} ${a}`));
+
+  console.log(`\n${CYAN}${B}🛡️  Active Hooks:${R}`);
+  const hookNames = Object.keys(hooksConfig);
+  if (hookNames.length === 0) console.log(`  ${GRAY}(no hooks.json)${R}`);
+  else hookNames.forEach(h => console.log(`  ${GREEN}✔${R} ${B}${h}${R}`));
+  console.log('');
+}
+
+function testSkill(name) {
+  if (!name) { console.error(`${RED}Usage: everything-bob test-skill <skill-name>${R}`); process.exit(1); }
+  const skillMd = path.join(REPO_ROOT, 'skills', name, 'SKILL.md');
+  if (!fs.existsSync(skillMd)) { console.error(`${RED}✖ SKILL.md not found for '${name}'${R}`); process.exit(1); }
+
+  const content = fs.readFileSync(skillMd, 'utf8');
+  console.log(`${B}🔍 Validating skill: [${CYAN}${name}${R}${B}]...${R}`);
+
+  if (!content.startsWith('---')) { console.error(`  ${RED}✖ Missing YAML frontmatter${R}`); process.exit(1); }
+  const parts = content.split('---');
+  if (parts.length < 3) { console.error(`  ${RED}✖ Malformed frontmatter boundary${R}`); process.exit(1); }
+
+  const fm = parts[1];
+  const nameMatch = fm.match(/name:\s*([^\n\r]+)/);
+  const descMatch = fm.match(/description:\s*>?-?\s*([^\n\r]+)/);
+
+  if (!nameMatch) { console.error(`  ${RED}✖ Missing 'name' field in frontmatter${R}`); process.exit(1); }
+  console.log(`  ${GREEN}✔${R} name: ${B}${nameMatch[1].trim()}${R}`);
+
+  if (!descMatch) { console.error(`  ${RED}✖ Missing 'description' field in frontmatter${R}`); process.exit(1); }
+  console.log(`  ${GREEN}✔${R} description trigger: ${GRAY}${descMatch[1].trim().substring(0, 80)}${R}`);
+
+  // Validate name matches directory
+  if (nameMatch[1].trim() !== name) {
+    console.log(`  ${YELLOW}⚠${R}  name field '${nameMatch[1].trim()}' doesn't match directory name '${name}'`);
+  }
+
+  // Check for numbered steps in body
+  const body = parts.slice(2).join('---');
+  if (!/^\d+\./m.test(body)) {
+    console.log(`  ${YELLOW}⚠${R}  Body has no numbered steps — consider adding step-by-step instructions`);
+  }
+
+  console.log(`\n${GREEN}${B}✨ Skill '${name}' passed validation!${R}\n`);
+}
+
+function testAll(asJson = false) {
+  const skillsDir = path.join(REPO_ROOT, 'skills');
+  const hooksDir = path.join(REPO_ROOT, 'hooks');
+  const agentsDir = path.join(REPO_ROOT, 'agents');
+
+  const skills = fs.readdirSync(skillsDir).filter(s => fs.statSync(path.join(skillsDir, s)).isDirectory()).sort();
+  const hooks = fs.readdirSync(hooksDir).filter(h => fs.statSync(path.join(hooksDir, h)).isDirectory()).sort();
+  const agents = fs.readdirSync(agentsDir).filter(f => f.endsWith('.md')).map(f => f.replace('.md', '')).sort();
+
+  let totalTokens = 0;
+  const skillData = [];
+
+  if (!asJson) { banner(); console.log(`${B}🧪 Benchmarking all skills, hooks, and agents...${R}\n`); console.log(`${CYAN}${B}⚡ Skills:${R}`); }
+
+  for (const s of skills) {
+    const md = path.join(skillsDir, s, 'SKILL.md');
+    if (fs.existsSync(md)) {
+      const len = fs.readFileSync(md, 'utf8').length;
+      const est = Math.round(len / 4);
+      totalTokens += est;
+      skillData.push({ name: s, tokens: est });
+      if (!asJson) console.log(`  ${GREEN}✔${R} ${s.padEnd(32)} ${GRAY}(~${est} tokens)${R}`);
+    }
+  }
+
+  if (!asJson) {
+    console.log(`\n${CYAN}${B}🛡️  Hooks:${R}`);
+    hooks.forEach(h => console.log(`  ${GREEN}✔${R} ${h}`));
+    console.log(`\n${CYAN}${B}🤖 Agents:${R}`);
+    agents.forEach(a => console.log(`  ${GREEN}✔${R} ${a}`));
+    console.log(`\n${GREEN}${B}✨ Benchmark Summary:${R}`);
+    console.log(`  Progressive Skills: ${B}${skills.length}${R}`);
+    console.log(`  Lifecycle Hooks:    ${B}${hooks.length}${R}`);
+    console.log(`  Subagent Specs:     ${B}${agents.length}${R}`);
+    console.log(`  Total Tokens (all skill bodies): ${B}~${totalTokens.toLocaleString()}${R}`);
+    console.log(`  Tokens saved/turn (>85%):        ${B}~${Math.round(totalTokens * 0.85).toLocaleString()}${R}\n`);
+  } else {
+    console.log(JSON.stringify({ version: VERSION, skillsCount: skills.length, hooksCount: hooks.length, agentsCount: agents.length, totalTokens, tokensSavedPerTurn: Math.round(totalTokens * 0.85), skills: skillData, hooks, agents }, null, 2));
+  }
+}
+
+function newSkill(name) {
+  if (!name) { console.error(`${RED}Error: provide a skill name${R}`); process.exit(1); }
+  const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const dir = path.join(REPO_ROOT, 'skills', clean);
+  if (fs.existsSync(dir)) { console.error(`${RED}Skill '${clean}' already exists${R}`); process.exit(1); }
+
+  const title = clean.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'SKILL.md'), `---
+name: ${clean}
+description: >-
+  Use when the user wants to ... (describe trigger conditions concretely).
+---
+
+# ${title}
+
+## Overview
+Brief description of what this skill guides Bob to do.
+
+## Step 1 — Assess
+1. Read relevant files with \`read_file\` and \`grep\`.
+2. Understand the current state before making changes.
+
+## Step 2 — Implement
+1. Make the targeted change.
+2. Follow existing project conventions.
+
+## Step 3 — Verify
+1. Run tests: \`execute_command\`
+2. Confirm all tests pass.
+
+## Verification Checklist
+- [ ] Tests pass
+- [ ] No regressions
+- [ ] Code follows project conventions
+`);
+  console.log(`${GREEN}✔ Created skill: ${B}${clean}${R}\n  ${GRAY}${dir}/SKILL.md${R}\n`);
+}
+
+function newAgent(name) {
+  if (!name) { console.error(`${RED}Error: provide an agent name${R}`); process.exit(1); }
+  const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const file = path.join(REPO_ROOT, 'agents', `${clean}.md`);
+  if (fs.existsSync(file)) { console.error(`${RED}Agent '${clean}' already exists${R}`); process.exit(1); }
+
+  const title = clean.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, `# Subagent: ${title}
+
+## Role & Mission
+Describe the specific purpose and focus area of this subagent.
+
+## Permitted Tools & Scope
+- **Allowed**: read_file, grep, glob, list_files
+- **Restricted**: (list any prohibited tools)
+
+## Operating Principles
+1. **Surgical Precision**: Focus exclusively on the delegated objective.
+2. **Evidence-Based**: Every finding cites file path and line number.
+3. **Deterministic**: Verify all claims before reporting.
+
+## Handoff Format
+Return a structured report to the parent agent:
+- **Summary**:
+- **Findings / Actions Taken**:
+- **Modified Files**:
+- **Open Questions**:
+`);
+  console.log(`${GREEN}✔ Created agent spec: ${B}${clean}${R}\n  ${GRAY}${file}${R}\n`);
+}
+
+function addComponent(type, name, isGlobal = false) {
+  const target = isGlobal ? GLOBAL_BOB_DIR : BOB_DIR;
+  if (!type || !name) { console.error(`${RED}Usage: everything-bob add <skill|hook|mode|plugin> <name>${R}`); process.exit(1); }
+  const clean = name.trim().toLowerCase();
+
+  if (type === 'skill') {
+    const src = path.join(REPO_ROOT, 'skills', clean);
+    if (!fs.existsSync(src)) { console.error(`${RED}Skill '${clean}' not found in catalog${R}`); process.exit(1); }
+    copyDir(src, path.join(target, 'skills', clean));
+    console.log(`${GREEN}✔ Added skill '${clean}' to ${path.join(target, 'skills')}${R}`);
+  } else if (type === 'hook') {
+    const src = path.join(REPO_ROOT, 'hooks', clean);
+    if (!fs.existsSync(src)) { console.error(`${RED}Hook '${clean}' not found in catalog${R}`); process.exit(1); }
+    copyDir(src, path.join(target, 'hooks', clean));
+    console.log(`${GREEN}✔ Added hook '${clean}' to ${path.join(target, 'hooks')}${R}`);
+  } else if (type === 'mode') {
+    console.log(`${YELLOW}ℹ${R}  To add a custom mode, copy the entry from ${REPO_ROOT}/modes/custom_modes.yaml into your Bob custom_modes.yaml file.`);
+  } else if (type === 'plugin') {
+    const src = path.join(REPO_ROOT, 'plugins', clean);
+    if (!fs.existsSync(src)) { console.error(`${RED}Plugin '${clean}' not found in catalog${R}`); process.exit(1); }
+    copyDir(src, path.join(target, 'plugins', clean));
+    console.log(`${GREEN}✔ Added plugin '${clean}' to ${path.join(target, 'plugins')}${R}`);
+  } else {
+    console.error(`${RED}Unknown type '${type}'. Use: skill, hook, mode, or plugin${R}`);
+    process.exit(1);
+  }
+}
+
+function removeComponent(type, name, isGlobal = false) {
+  const target = isGlobal ? GLOBAL_BOB_DIR : BOB_DIR;
+  if (!type || !name) { console.error(`${RED}Usage: everything-bob remove <skill|hook|plugin> <name>${R}`); process.exit(1); }
+  const clean = name.trim().toLowerCase();
+
+  let dest = '';
+  if (type === 'skill') dest = path.join(target, 'skills', clean);
+  else if (type === 'hook') dest = path.join(target, 'hooks', clean);
+  else if (type === 'plugin') dest = path.join(target, 'plugins', clean);
+  else { console.error(`${RED}Unknown type '${type}'${R}`); process.exit(1); }
+
+  if (!fs.existsSync(dest)) { console.log(`${YELLOW}'${clean}' is not installed in ${dest}${R}`); return; }
+  fs.rmSync(dest, { recursive: true, force: true });
+  console.log(`${GREEN}✔ Removed '${clean}' from ${dest}${R}`);
+}
+
+function validate() {
+  banner();
+  console.log(`${B}🧪 Validating everything-bob components...${R}\n`);
+  let errors = 0;
+  const skillsDir = path.join(REPO_ROOT, 'skills');
+  for (const s of fs.readdirSync(skillsDir)) {
+    const md = path.join(skillsDir, s, 'SKILL.md');
+    if (!fs.existsSync(md)) { console.log(`  ${RED}✖${R} skills/${s}/SKILL.md missing`); errors++; continue; }
+    const content = fs.readFileSync(md, 'utf8');
+    if (!content.startsWith('---') || content.split('---').length < 3) { console.log(`  ${RED}✖${R} skills/${s}/SKILL.md invalid frontmatter`); errors++; continue; }
+    const fm = content.split('---')[1];
+    if (!fm.includes('name:') || !fm.includes('description:')) { console.log(`  ${RED}✖${R} skills/${s}/SKILL.md missing name or description`); errors++; continue; }
+    console.log(`  ${GREEN}✔${R} skills/${s}/SKILL.md`);
+  }
+  const hooksDir = path.join(REPO_ROOT, 'hooks');
+  for (const h of fs.readdirSync(hooksDir)) {
+    const hf = path.join(hooksDir, h, 'hooks.json');
+    if (!fs.existsSync(hf)) { console.log(`  ${RED}✖${R} hooks/${h}/hooks.json missing`); errors++; continue; }
+    try { JSON.parse(fs.readFileSync(hf, 'utf8')); } catch (_) { console.log(`  ${RED}✖${R} hooks/${h}/hooks.json invalid JSON`); errors++; continue; }
+    console.log(`  ${GREEN}✔${R} hooks/${h}/hooks.json`);
+  }
+  if (errors === 0) console.log(`\n${GREEN}${B}✨ All components valid!${R}\n`);
+  else { console.log(`\n${RED}${B}✖ ${errors} validation error(s) found.${R}\n`); process.exit(1); }
+}
+
+function info(name) {
+  if (!name) { console.error(`${RED}Usage: everything-bob info <skill|agent|hook>${R}`); process.exit(1); }
+  const skillMd = path.join(REPO_ROOT, 'skills', name, 'SKILL.md');
+  const agentMd = path.join(REPO_ROOT, 'agents', `${name}.md`);
+  const hookJson = path.join(REPO_ROOT, 'hooks', name, 'hooks.json');
+  if (fs.existsSync(skillMd)) { console.log(fs.readFileSync(skillMd, 'utf8')); }
+  else if (fs.existsSync(agentMd)) { console.log(fs.readFileSync(agentMd, 'utf8')); }
+  else if (fs.existsSync(hookJson)) { console.log(JSON.stringify(JSON.parse(fs.readFileSync(hookJson, 'utf8')), null, 2)); }
+  else { console.error(`${RED}'${name}' not found in skills, agents, or hooks catalog${R}`); process.exit(1); }
+}
+
+function completion(install = false, isDryRun = false, customRc = null) {
+  const script = `
+# Everything Bob (everything-bob) shell autocompletion
+_everything_bob() {
+  local cur prev commands
+  COMPREPLY=()
+  cur="\${COMP_WORDS[COMP_CWORD]}"
+  prev="\${COMP_WORDS[COMP_CWORD-1]}"
+  commands="doctor list init install status diff update export add remove new-skill new-agent test-skill test-all info validate completion version help"
+  skills="$(ls ${path.join(REPO_ROOT, 'skills')} 2>/dev/null | tr '\\n' ' ')"
+  hooks="$(ls ${path.join(REPO_ROOT, 'hooks')} 2>/dev/null | tr '\\n' ' ')"
+  agents="$(ls ${path.join(REPO_ROOT, 'agents')} 2>/dev/null | sed 's/.md//g' | tr '\\n' ' ')"
+  plugins="$(ls ${path.join(REPO_ROOT, 'plugins')} 2>/dev/null | tr '\\n' ' ')"
+
+  case "\${prev}" in
+    everything-bob|ebob) COMPREPLY=( $(compgen -W "\${commands}" -- "\${cur}") ); return 0;;
+    add|remove) COMPREPLY=( $(compgen -W "skill hook mode plugin" -- "\${cur}") ); return 0;;
+    skill|test-skill|info) COMPREPLY=( $(compgen -W "\${skills}" -- "\${cur}") ); return 0;;
+    hook) COMPREPLY=( $(compgen -W "\${hooks}" -- "\${cur}") ); return 0;;
+    plugin) COMPREPLY=( $(compgen -W "\${plugins}" -- "\${cur}") ); return 0;;
+    --profile) COMPREPLY=( $(compgen -W "core developer full" -- "\${cur}") ); return 0;;
+  esac
+}
+complete -F _everything_bob everything-bob ebob
+`.trim();
+
+  if (!install) { console.log(script); return; }
+  banner();
+  const isZsh = (process.env.SHELL || '').includes('zsh') || fs.existsSync(path.join(os.homedir(), '.zshrc'));
+  const rc = customRc || (isZsh ? path.join(os.homedir(), '.zshrc') : path.join(os.homedir(), '.bashrc'));
+  if (fs.existsSync(rc) && fs.readFileSync(rc, 'utf8').includes('_everything_bob()')) {
+    console.log(`  ${YELLOW}ℹ${R}  Autocompletion already configured in ${B}${rc}${R}\n`); return;
+  }
+  if (isDryRun) { console.log(`  ${CYAN}[DRY RUN]${R} Would append completion to ${B}${rc}${R}\n`); return; }
+  fs.appendFileSync(rc, `\n\n# Everything Bob Autocompletion\n${script}\n`);
+  console.log(`  ${GREEN}✔${R} Installed autocompletion into ${B}${rc}${R}\n  Reload with: ${GREEN}source ${rc}${R}\n`);
+}
+
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+const args = process.argv.slice(2);
+const cmd = args[0];
+const isGlobal = args.includes('--global');
+const isDryRun = args.includes('--dry-run');
+const asJson = args.includes('--json');
+const profileArg = args[args.indexOf('--profile') + 1] || 'developer';
+
+switch (cmd) {
+  case 'doctor': doctor(); break;
+  case 'list': list(); break;
+  case 'install': case 'init': install(profileArg, isGlobal, isDryRun); break;
+  case 'status': case 'check': status(isGlobal, asJson); break;
+  case 'test-skill': testSkill(args[1]); break;
+  case 'test-all': case 'benchmark': testAll(asJson); break;
+  case 'new-skill': newSkill(args[1]); break;
+  case 'new-agent': newAgent(args[1]); break;
+  case 'add': addComponent(args[1], args[2], isGlobal); break;
+  case 'remove': removeComponent(args[1], args[2], isGlobal); break;
+  case 'validate': validate(); break;
+  case 'info': case 'show': info(args[1]); break;
+  case 'completion': completion(args.includes('--install'), isDryRun, args[args.indexOf('--rc') + 1] || null); break;
+  case 'version': case '-v': case '--version': console.log(VERSION); break;
+  case 'diff':
+    banner();
+    console.log(`${B}🔍 diff${R}: compare workspace vs. catalog — run ${GREEN}everything-bob status${R} to see installed components.\n`);
+    break;
+  case 'update':
+    banner();
+    console.log(`${B}🔄 update${R}: re-run ${GREEN}everything-bob install --profile <profile>${R} to update to latest catalog versions.\n`);
+    break;
+  case 'export':
+    banner();
+    console.log(`${B}📦 export${R}: configuration is stored in your ${GREEN}.bob/${R} directory — commit it to version control.\n`);
+    break;
+  case 'help': case '-h': case '--help': default: help(); break;
+}

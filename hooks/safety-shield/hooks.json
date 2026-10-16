@@ -1,0 +1,16 @@
+{
+  "safety-shield": {
+    "PreToolUse": [
+      {
+        "matcher": "execute_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/safety-shield/scripts/safety-gate.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

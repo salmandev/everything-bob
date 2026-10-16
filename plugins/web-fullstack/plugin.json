@@ -1,0 +1,7 @@
+{
+  "name": "Web Fullstack Plugin",
+  "version": "1.0.0",
+  "description": "Frontend and fullstack rules and skills: React, Next.js, CSS, accessibility, responsive design.",
+  "rules": ["rules/frontend-standards.md"],
+  "skills": ["skills/responsive-design"]
+}
