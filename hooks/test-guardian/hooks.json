@@ -1,0 +1,15 @@
+{
+  "test-guardian": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .bob/hooks/test-guardian/scripts/test-guardian.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

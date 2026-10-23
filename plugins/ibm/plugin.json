@@ -1,0 +1,7 @@
+{
+  "name": "IBM Platform Plugin",
+  "version": "1.0.0",
+  "description": "IBM-specific rules and skills: watsonx.ai, IBM Cloud, Db2, IBM i, Event Streams, security compliance.",
+  "rules": ["rules/ibm-platform.md"],
+  "skills": ["skills/watsonx-quick-start"]
+}

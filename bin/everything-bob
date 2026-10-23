@@ -179,9 +179,9 @@ function copyDir(src, dest) {
   }
 }
 
-function install(profile = 'developer', isGlobal = false, isDryRun = false) {
+function install(profile = 'developer', isGlobal = false, isDryRun = false, customWorkspace = null) {
   banner();
-  const targetDir = isGlobal ? GLOBAL_BOB_DIR : BOB_DIR;
+  const targetDir = customWorkspace ? path.resolve(customWorkspace) : (isGlobal ? GLOBAL_BOB_DIR : BOB_DIR);
   const targetSkills = path.join(targetDir, 'skills');
   const targetHooks = path.join(targetDir, 'hooks');
   const targetAgents = path.join(targetDir, 'agents');
@@ -608,7 +608,7 @@ const profileArg = args[args.indexOf('--profile') + 1] || 'developer';
 switch (cmd) {
   case 'doctor': doctor(); break;
   case 'list': list(); break;
-  case 'install': case 'init': install(profileArg, isGlobal, isDryRun); break;
+  case 'install': case 'init': install(profileArg, isGlobal, isDryRun, args[args.indexOf('--workspace') + 1] || null); break;
   case 'status': case 'check': status(isGlobal, asJson); break;
   case 'test-skill': testSkill(args[1]); break;
   case 'test-all': case 'benchmark': testAll(asJson); break;
@@ -620,17 +620,65 @@ switch (cmd) {
   case 'info': case 'show': info(args[1]); break;
   case 'completion': completion(args.includes('--install'), isDryRun, args[args.indexOf('--rc') + 1] || null); break;
   case 'version': case '-v': case '--version': console.log(VERSION); break;
-  case 'diff':
+  case 'diff': {
     banner();
-    console.log(`${B}🔍 diff${R}: compare workspace vs. catalog — run ${GREEN}everything-bob status${R} to see installed components.\n`);
+    const diffTarget = args[args.indexOf('--workspace') + 1] || (isGlobal ? GLOBAL_BOB_DIR : BOB_DIR);
+    console.log(`${B}🔍 Comparing workspace vs. catalog...${R}\nTarget: ${CYAN}${diffTarget}${R}\n`);
+    if (!fs.existsSync(diffTarget)) { console.log(`${YELLOW}Not initialized. Run: everything-bob install${R}\n`); break; }
+    const wsSkills = path.join(diffTarget, 'skills');
+    const catSkills = path.join(REPO_ROOT, 'skills');
+    let modCount = 0, matchCount = 0, newCount = 0;
+    console.log(`${CYAN}${B}⚡ Skills:${R}`);
+    if (fs.existsSync(wsSkills)) {
+      for (const s of fs.readdirSync(wsSkills).filter(f => !f.startsWith('.')).sort()) {
+        const wsMd = path.join(wsSkills, s, 'SKILL.md');
+        const catMd = path.join(catSkills, s, 'SKILL.md');
+        if (!fs.existsSync(catMd)) { console.log(`  ${CYAN}+${R} ${s} ${GRAY}[local only]${R}`); newCount++; }
+        else if (fs.existsSync(wsMd) && fs.readFileSync(wsMd,'utf8') !== fs.readFileSync(catMd,'utf8')) { console.log(`  ${YELLOW}~${R} ${s} ${GRAY}[modified vs catalog]${R}`); modCount++; }
+        else { console.log(`  ${GREEN}✔${R} ${s}`); matchCount++; }
+      }
+    }
+    console.log(`\n${GRAY}Summary: ${matchCount} in-sync, ${modCount} modified, ${newCount} local-only${R}\n`);
     break;
-  case 'update':
+  }
+  case 'update': {
     banner();
-    console.log(`${B}🔄 update${R}: re-run ${GREEN}everything-bob install --profile <profile>${R} to update to latest catalog versions.\n`);
+    const updateTarget = args[args.indexOf('--workspace') + 1] || (isGlobal ? GLOBAL_BOB_DIR : BOB_DIR);
+    if (!isDryRun) console.log(`${B}🔄 Updating installed components in ${CYAN}${updateTarget}${R}${B}...${R}\n`);
+    else console.log(`${YELLOW}${B}🔍 DRY RUN${R}\n`);
+    if (!fs.existsSync(updateTarget)) { console.log(`${YELLOW}Not initialized. Run: everything-bob install${R}\n`); break; }
+    let updCount = 0;
+    const tSkills = path.join(updateTarget, 'skills');
+    if (fs.existsSync(tSkills)) {
+      for (const s of fs.readdirSync(tSkills).filter(f => !f.startsWith('.'))) {
+        const src = path.join(REPO_ROOT, 'skills', s);
+        if (fs.existsSync(src)) { if (!isDryRun) copyDir(src, path.join(tSkills, s)); updCount++; console.log(`  ${GREEN}✔${R} ${isDryRun ? '[DRY RUN] ' : ''}synced skill: ${s}`); }
+      }
+    }
+    const tHooks = path.join(updateTarget, 'hooks');
+    if (fs.existsSync(tHooks)) {
+      for (const h of fs.readdirSync(tHooks).filter(f => !f.startsWith('.'))) {
+        const src = path.join(REPO_ROOT, 'hooks', h);
+        if (fs.existsSync(src)) { if (!isDryRun) copyDir(src, path.join(tHooks, h)); console.log(`  ${GREEN}✔${R} ${isDryRun ? '[DRY RUN] ' : ''}refreshed hook: ${h}`); }
+      }
+    }
+    console.log(`\n${GREEN}${B}${isDryRun ? '✨ Dry run — 0 files modified.' : `✨ Updated ${updCount} components.`}${R}\n`);
     break;
-  case 'export':
+  }
+  case 'export': {
     banner();
-    console.log(`${B}📦 export${R}: configuration is stored in your ${GREEN}.bob/${R} directory — commit it to version control.\n`);
+    const exportTarget = args[args.indexOf('--workspace') + 1] || (isGlobal ? GLOBAL_BOB_DIR : BOB_DIR);
+    const outFile = args[args.indexOf('--output') + 1] || path.join(process.cwd(), 'everything-bob-profile.json');
+    console.log(`${B}📦 Exporting config bundle from ${CYAN}${exportTarget}${R}${B}...${R}\n`);
+    if (!fs.existsSync(exportTarget)) { console.error(`${RED}Source dir not found${R}`); process.exit(1); }
+    const bundle = { generator: 'everything-bob', version: VERSION, exportedAt: new Date().toISOString(), skills: [], agents: [], hooks: null };
+    const eSkills = path.join(exportTarget, 'skills');
+    if (fs.existsSync(eSkills)) for (const s of fs.readdirSync(eSkills).filter(f => !f.startsWith('.'))) { const md = path.join(eSkills, s, 'SKILL.md'); if (fs.existsSync(md)) bundle.skills.push({ name: s, content: fs.readFileSync(md, 'utf8') }); }
+    const hf = path.join(exportTarget, 'hooks.json');
+    if (fs.existsSync(hf)) { try { bundle.hooks = JSON.parse(fs.readFileSync(hf, 'utf8')); } catch(_){} }
+    fs.writeFileSync(outFile, JSON.stringify(bundle, null, 2));
+    console.log(`  ${GREEN}✔${R} Exported ${bundle.skills.length} skills to ${B}${outFile}${R}\n`);
     break;
+  }
   case 'help': case '-h': case '--help': default: help(); break;
 }

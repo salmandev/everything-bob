@@ -30,11 +30,47 @@ Check each category against the codebase:
 
 ## Step 4 — Dependency Audit
 ```bash
+# Node.js — flag moderate and above
 npm audit --audit-level=moderate
-# or
+
+# PHP / Composer ≥ 2.4
+composer audit
+
+# Python
 pip-audit
-# or
+
+# Java / Maven (CVSS ≥ 7 fails build)
+mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7
+
+# Go
+govulncheck ./...
+
+# Rust
 cargo audit
+
+# Universal multi-ecosystem (images, filesystems, SBOMs)
+grype dir:.
+```
+
+## Step 4b — Recent CVE Spot-Checks (last 90 days)
+
+Cross-reference the stack against high-impact recent CVEs.
+Activate the `cve-mitigator` skill for a full per-ecosystem triage walkthrough
+with exact version pins, exploit descriptions, and Nginx hardening configs.
+
+Quick single-command check:
+```bash
+# Node — check specific package versions
+npm list path-to-regexp nanoid cross-spawn
+
+# Java — look for Log4Shell / Text4Shell in tree
+mvn dependency:tree | grep -E "log4j|commons-text|spring"
+
+# PHP — confirm PHP version is patched
+php -v   # should be ≥ 8.1.31 / 8.2.26 / 8.3.14
+
+# Nginx — confirm version
+nginx -v 2>&1
 ```
 
 ## Step 5 — Report Findings
