@@ -121,6 +121,22 @@
       max-width: 740px; margin: 0 auto 36px;
     }
 
+    /* ── Sponsor ── */
+    .sponsor-box {
+      max-width: 640px; margin: 32px auto 0; padding: 20px 24px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-glow);
+      border-radius: 14px; text-align: center;
+    }
+    .sponsor-box h3 { font-size: 1.05rem; margin-bottom: 6px; }
+    .sponsor-box p { font-size: 0.92rem; margin: 0 auto 14px; max-width: none; }
+    .sponsor-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .sponsor-links a {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text-main); padding: 8px 16px; border-radius: 8px;
+      text-decoration: none; font-weight: 600; font-size: 0.88rem; transition: all 0.2s;
+    }
+    .sponsor-links a:hover { background: rgba(255,255,255,0.14); transform: translateY(-1px); }
+
     /* ── Profile Tabs ── */
     .profile-tabs {
       display: inline-flex; flex-wrap: wrap; justify-content: center;
@@ -485,6 +501,16 @@
       <div class="metric-card"><div class="metric-value">9</div><div class="metric-label">Scoped Subagents</div></div>
       <div class="metric-card"><div class="metric-value">5</div><div class="metric-label">Custom Modes</div></div>
       <div class="metric-card"><div class="metric-value">85%+</div><div class="metric-label">Token Savings / Turn</div></div>
+    </div>
+
+    <div class="sponsor-box">
+      <h3>💖 Support Everything Bob</h3>
+      <p>Free and open source. If it saves you time, help keep it going.</p>
+      <div class="sponsor-links">
+        <a href="https://github.com/sponsors/salmandev" target="_blank">💖 GitHub Sponsors</a>
+        <a href="https://ko-fi.com/salmanshaikh62198" target="_blank">☕ Ko-fi</a>
+        <a href="https://paypal.me/shaikhsalman1" target="_blank">PayPal</a>
+      </div>
     </div>
   </section>
 
