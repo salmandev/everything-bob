@@ -35,6 +35,10 @@
     "type": "git",
     "url": "https://github.com/salmandev/everything-bob.git"
   },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/salmandev"
+  },
   "homepage": "https://github.com/salmandev/everything-bob",
   "bugs": {
     "url": "https://github.com/salmandev/everything-bob/issues"

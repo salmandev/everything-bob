@@ -7,6 +7,8 @@
 [![IBM Bob](https://img.shields.io/badge/IBM-Bob-0062FF?logo=ibm&logoColor=white)](https://www.ibm.com)
 [![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/salmandev/everything-bob)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/salmandev)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/shaikhsalman1)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue.svg)](https://github.com/salmandev/everything-bob)
 
 **The open-source skill library, hook harness, rule system, and multi-mode orchestrator for IBM Bob.**
@@ -312,6 +314,12 @@ High-value contribution areas:
 - Inspired by [Everything Gemini (everything-gemini)](https://github.com/salmandev/everything-gemini) — the open-source Antigravity harness.
 - Built with 💙 for the IBM Bob developer community.
 - *No one knows Bob better than Bob himself.*
+
+---
+
+## 💖 Support
+
+Everything Bob is free and open source. If it saves you time, consider [sponsoring on GitHub](https://github.com/sponsors/salmandev) or [donating via PayPal](https://paypal.me/shaikhsalman1) to support ongoing development.
 
 ---
 
