@@ -320,7 +320,7 @@ High-value contribution areas:
 
 ## 💖 Support
 
-Everything Bob is free and open source. If it saves you time, consider [sponsoring on GitHub](https://github.com/sponsors/salmandev) [buying a coffee on Ko-fi](https://ko-fi.com/salmanshaikh62198), or [donating via PayPal](https://paypal.me/shaikhsalman1) to support ongoing development.
+Everything Bob is free and open source. If it saves you time, consider [sponsoring on GitHub](https://github.com/sponsors/salmandev), [buying a coffee on Ko-fi](https://ko-fi.com/salmanshaikh62198), or [donating via PayPal](https://paypal.me/shaikhsalman1) to support ongoing development.
 
 ---
 
